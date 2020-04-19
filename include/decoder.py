@@ -33,9 +33,8 @@ def deepdecoder(
         act_fun=nn.ReLU(), # nn.LeakyReLU(0.2, inplace=True) 
         bn_before_act = False,
         bn_affine = True,
-        bn = True,
-        upsample_first = True,
-        bias=False
+        bias=False,
+        last_noup=False, # if true have a last extra conv-relu-bn layer without the upsampling before linearly combining them
         ):
     
     depth = len(num_channels)
@@ -54,26 +53,24 @@ def deepdecoder(
     
     model = nn.Sequential()
 
-    for i in range(len(num_channels)-1):
+    for i in range(len(num_channels)-2):
+        model.add(conv( num_channels[i], num_channels[i+1],  filter_size[i], 1, pad=pad, bias=bias))
+        if upsample_mode!='none' and i != len(num_channels)-2:
+            # align_corners: from pytorch.org: if True, the corner pixels of the input and output tensors are aligned, and thus preserving the values at those pixels. Default: False
+            # default seems to work slightly better
+            model.add(nn.Upsample(size=hidden_size[i], mode=upsample_mode,align_corners=False))
         
-        if upsample_first:
-            model.add(conv( num_channels[i], num_channels[i+1],  filter_size[i], 1, pad=pad, bias=bias))
-            if upsample_mode!='none' and i != len(num_channels)-2:
-                model.add(nn.Upsample(size=hidden_size[i], mode=upsample_mode,align_corners=True))
-            #model.add(nn.functional.interpolate(size=None,scale_factor=2, mode=upsample_mode))	
-        else:
-            if upsample_mode!='none' and i!=0:
-                model.add(nn.Upsample(size=hidden_size[i], mode=upsample_mode,align_corners=True))
-            #model.add(nn.functional.interpolate(size=None,scale_factor=2, mode=upsample_mode))	
-            model.add(conv( num_channels[i], num_channels[i+1],  filter_size[i], 1, pad=pad,bias=bias))        
-        
-        if i != len(num_channels)-1:	
-            if(bn_before_act and bn): 
-                model.add(nn.BatchNorm2d( num_channels[i+1] ,affine=bn_affine))
-            if act_fun is not None:    
-                model.add(act_fun)
-            if( (not bn_before_act) and bn):
-                model.add(nn.BatchNorm2d( num_channels[i+1], affine=bn_affine))
+        if(bn_before_act): 
+            model.add(nn.BatchNorm2d( num_channels[i+1] ,affine=bn_affine))
+        if act_fun is not None:    
+            model.add(act_fun)
+        if not bn_before_act:
+            model.add(nn.BatchNorm2d( num_channels[i+1], affine=bn_affine))
+    
+    if last_noup:
+        model.add(conv( num_channels[-2], num_channels[-1],  filter_size[-2], 1, pad=pad, bias=bias))
+        model.add(act_fun)
+        model.add(nn.BatchNorm2d( num_channels[-1], affine=bn_affine))
     
     model.add(conv( num_channels[-1], num_output_channels, 1, pad=pad,bias=bias))
     if need_sigmoid:
