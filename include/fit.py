@@ -9,7 +9,8 @@ from .helpers import *
 
 dtype = torch.cuda.FloatTensor
 #dtype = torch.FloatTensor
-           
+
+from data import transforms as transform
 
 def exp_lr_scheduler(optimizer, epoch, init_lr=0.001, lr_decay_epoch=500):
     """Decay learning rate by a factor of 0.1 every lr_decay_epoch epochs."""
@@ -40,6 +41,14 @@ def get_weights(net):
             weights += [m.weight.data.cpu().numpy()]
     return weights
 
+def channels2imgs(out):
+    sh = out.shape
+    chs = int(sh[0]/2)
+    imgs = np.zeros( (chs,sh[1],sh[2]) )
+    for i in range(chs):
+        imgs[i] = np.sqrt( out[2*i]**2 + out[2*i+1]**2 )
+    return imgs
+
 def fit(net,
         img_noisy_var,
         num_channels,
@@ -65,6 +74,7 @@ def fit(net,
         show_images=False,
         plot_after=None,
         in_size=None,
+        MRI_multicoil_reference=None,
        ):
 
     if net_input is not None:
@@ -102,7 +112,6 @@ def fit(net,
 
     mse_wrt_noisy = np.zeros(num_iter)
     mse_wrt_truth = np.zeros(num_iter)
-    
     
     print( "init norm: ", np.linalg.norm( net( net_input.type(dtype) ).data.cpu().numpy()[0] ) )
     print( "orig img norm: ", np.linalg.norm( img_clean_var.data.cpu().numpy() ))
@@ -170,6 +179,12 @@ def fit(net,
             true_loss = mse( Variable(out.data, requires_grad=False).type(dtype), img_clean_var.type(dtype) )
             mse_wrt_truth[i] = true_loss.data.cpu().numpy()
             
+            if MRI_multicoil_reference is not None:
+                out_chs = net( net_input.type(dtype) ).data.cpu().numpy()[0]
+                out_imgs = channels2imgs(out_chs)
+                out_img_np = transform.root_sum_of_squares( torch.tensor(out_imgs) , dim=0).numpy()
+                mse_wrt_truth[i] = np.linalg.norm(MRI_multicoil_reference - out_img_np)
+            
             if output_gradients:
                 for ind,p in enumerate(list(filter(lambda p: p.grad is not None and len(p.data.shape)>2, net.parameters()))):
                     out_grads[ind,i] = p.grad.data.norm(2).item()
@@ -180,7 +195,7 @@ def fit(net,
             if i % 10 == 0:
                 out2 = net(Variable(net_input_saved).type(dtype))
                 loss2 = mse(out2, img_clean_var)
-                print ('Iteration %05d    Train loss %f  Actual loss %f Actual loss orig %f' % (i, loss.data,true_loss.data,loss2.data), '\r', end='')
+                print ('Iteration %05d    Train loss %f  Actual loss %f Actual loss orig %f' % (i, loss.data,mse_wrt_truth[i],loss2.data), '\r', end='')
             
             if show_images:
                 if i % 50 == 0:

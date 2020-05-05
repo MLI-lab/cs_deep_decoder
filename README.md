@@ -2,7 +2,7 @@
 
 This repository provides code for reproducing the figures in the  paper:
 
-**``Compressive sensing with un-trained neural networks: Gradient descent finds the smoothest approximation''**
+**``Compressive sensing with un-trained neural networks: Gradient descent finds the smoothest approximation''** by Reinhard Heckel and Mahdi Soltanolkotabi. Contact: [reinhard.heckel@gmail.com](reinhard.heckel@gmail.com)
 
 
 ## Organization
@@ -29,10 +29,16 @@ conda install jupyter
 The code to reproduce the MRI experiment uses a few function from the fastMRI repository to load the k-space data, those can be obtained by copying the data and common folders from the repository [https://github.com/facebookresearch/fastMRI](https://github.com/facebookresearch/fastMRI).
 
 
-
 ## Citation
-
+```
+@article{heckel_compressive_2020,
+    author    = {Reinhard Heckel and Mahdi Soltanolkotabi},
+    title     = {Compressive sensing with un-trained neural networks: Gradient descent finds the smoothest approximation},
+    journal   = {arXiv:? [cs.LG]},
+    year      = {2020}
+}
+```
 
 ## Licence
 
-All files are provided under the terms of the Apache License, Version 2.0.
+All files are provided under the terms of the Apache License, Version 2.0
