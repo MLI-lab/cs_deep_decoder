@@ -34,7 +34,7 @@ The code to reproduce the MRI experiment uses a few function from the fastMRI re
 @article{heckel_compressive_2020,
     author    = {Reinhard Heckel and Mahdi Soltanolkotabi},
     title     = {Compressive sensing with un-trained neural networks: Gradient descent finds the smoothest approximation},
-    journal   = {arXiv:? [cs.LG]},
+    journal   = {arXiv:2005.03991 [cs.LG]},
     year      = {2020}
 }
 ```
