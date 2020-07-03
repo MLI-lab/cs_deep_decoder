@@ -26,8 +26,7 @@ The libraries can be installed via:
 conda install jupyter
 ```
 
-The code to reproduce the MRI experiment uses a few function from the fastMRI repository to load the k-space data, those can be obtained by copying the data and common folders from the repository [https://github.com/facebookresearch/fastMRI](https://github.com/facebookresearch/fastMRI).
-
+The code to reproduce the MRI experiment uses a few function from the fastMRI repository to load the k-space data, those can be obtained by copying the data and common folders from the repository [https://github.com/facebookresearch/fastMRI](https://github.com/facebookresearch/fastMRI). In particular, download the code from the fastMRI repository, and copy the folder fastMRI/data into the cs_deep_decoder repository.
 
 ## Citation
 ```
